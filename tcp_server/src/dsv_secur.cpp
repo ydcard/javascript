@@ -125,31 +125,31 @@ int HandleSafe::Base64_encrypt(char *in, int len, char *out){
 //}
 
 //Base64解密方式一：
-//int HandleSafe::Base64_decrypt(char *in, int len, char *out){
-//	return EVP_DecodeBlock((unsigned char*)out, (const unsigned char*)in, len);
-//}
+int HandleSafe::Base64_decrypt(char *in, int len, char *out){
+	return EVP_DecodeBlock((unsigned char*)out, (const unsigned char*)in, len);
+}
 
 //Base64解密方式二：
-int HandleSafe::Base64_decrypt(char *in, int len, char *out){
-	BIO * b64 = NULL;
-	BIO * bmem = NULL;
-	char * buffer = (char *)malloc(len);
-	memset(buffer, 0, len);
-
-	b64 = BIO_new(BIO_f_base64());
-
-	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);//0816：默认不换行
-
-	bmem = BIO_new_mem_buf(in, len);
-	bmem = BIO_push(b64, bmem);
-	int a = BIO_read(bmem, buffer, len);
-
-	BIO_free_all(bmem);
-	memcpy(out,buffer,a);
-	free(buffer);
-
-	return a;
-}
+//int HandleSafe::Base64_decrypt(char *in, int len, char *out){
+//	BIO * b64 = NULL;
+//	BIO * bmem = NULL;
+//	char * buffer = (char *)malloc(len);
+//	memset(buffer, 0, len);
+//
+//	b64 = BIO_new(BIO_f_base64());
+//
+//	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);//0816：默认不换行
+//
+//	bmem = BIO_new_mem_buf(in, len);
+//	bmem = BIO_push(b64, bmem);
+//	int a = BIO_read(bmem, buffer, len);
+//
+//	BIO_free_all(bmem);
+//	memcpy(out,buffer,a);
+//	free(buffer);
+//
+//	return a;
+//}
 
 
 int HandleSafe::RSA_encrypt(char *in, char *out, int len){

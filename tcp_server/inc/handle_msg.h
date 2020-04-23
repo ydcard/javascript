@@ -29,6 +29,7 @@
 #define BUFFER_SIZE 2018
 #define STATIC_LENGTH 103
 #define VIN_LENGTH 17
+#define VERSION_STR_LENGTH 10
 #define TOKEN_LENGTH 36
 #define RSA_LENGTH 392
 
@@ -54,23 +55,32 @@ typedef enum msgType{
 class HandleMsg
 {
 public:
-//	static HandleMsg* GetInstance();
+	static HandleMsg* GetInstance() {
+		static HandleMsg instance;
+		return &instance;
+	}
 	~HandleMsg();
-	HandleMsg();
-	void Recieve_Preprocess(char *buffer, int conn, int len);
-	void Handle_login(char *buffer,int conn);
-	void Handle_logout(char *buffer);
-	void Recieve_CallBackMessage(char *buffer);
-	void Recieve_ReissueMessage(char *buffer);
-	void Recieve_RealTimeMessage(char *buffer, int len);
+
+	void Recieve_Preprocess(char *buffer, int len, int conn);
+
+	void Recieve_login(char *buffer, int len, int conn);
+	void Recieve_logout(char *buffer, int len, int conn);
+	void Recieve_CallBackMessage(char *buffer, int len, int conn);
+	void Recieve_ReissueMessage(char *buffer, int len, int conn);
+	void Recieve_RealTimeMessage(char *buffer, int len, int conn);
+	void Recieve_Platlogin(char *buffer, int len, int conn);
+	void Recieve_HeartbeatMessage(char *buffer, int len, int conn);
+	void Recieve_requireRSA(char *buffer, int len, int conn);
+	void Recieve_AESKey(char *buffer, int len, int conn);
+
 	void log_message(char *buffer,int len);
-	void Recieve_Platlogin(char *buffer, int conn);
-	void Recieve_HeartbeatMessage(char *buffer);
-	void Recieve_requireRSA(char *buffer, int conn);
-	void Recieve_AESKey(char *buffer,int len);
-	void Send_requestRSA(int conn);
-//	void Send_requestAES(int conn);
-	void Send_requestPlatlogin(int conn);
+
+	void Send_responseCarLogin(int conn);
+	void Send_responseRSA(int conn);
+	void Send_responseAES(int conn);
+	void Send_responsePlatlogin(int conn);
+
+	// car cmd
 	void SendCmd_lock(uint8_t *buffer, int &len);
 	void SendCmd_find(uint8_t *buffer, int &len);
 	void HandleSend(char *buffer,int *len);
@@ -79,26 +89,13 @@ public:
 	int Continue_in();
 
 private:
+	HandleMsg();
+	std::string m_VERSION;
+	std::string m_VIN;
+	std::string m_TOKEN;
 	uint8_t m_msgType;
 	uint8_t m_encryptType;
 };
-
-class ConfigServer
-{
-public:
-	std::string m_VIN;
-	std::string m_TOKEN;
-//	std::string m_AESKEY;
-	static ConfigServer* GetInstance();
-	~ConfigServer();
-
-private:
-	static ConfigServer* m_configserver;
-	ConfigServer();
-
-};
-
-
 
 
 #endif /* HANDLE_MSG_H_ */

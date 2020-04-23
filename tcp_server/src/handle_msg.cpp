@@ -39,120 +39,16 @@ std::ofstream ydfs;
 
 YLOG_SET(false,true,VL_ALL)
 
-ConfigServer *ConfigServer::m_configserver = NULL;
-
-ConfigServer* ConfigServer::GetInstance()
-{
-	if (NULL == m_configserver)
-	{
-		m_configserver = new ConfigServer();
-	}
-
-	return m_configserver;
-}
-
-ConfigServer::ConfigServer(){
-	this->m_VIN = "AAAAAAAAAA0009990";
-	this->m_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-}
-
 HandleMsg::HandleMsg(){
-	this->m_msgType = 0;
-	this->m_encryptType = 0;
+	m_VIN = "AAAAAAAAAA0009990";
+	m_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	m_VERSION = "TT00040000";
+	m_msgType = 0;
+	m_encryptType = 0;
 }
 
 HandleMsg::~HandleMsg(){
 
-}
-
-void HandleMsg::Handle_login(char *buffer, int conn){
-	YLOG(VL_INFO,REC,"Recieve Car login\n");
-	ByteBuffer *bccpkt = new ByteBuffer();
-	bccpkt->put((uint8_t) 0x04);
-	bccpkt->put((uint8_t) 0x01);
-	bccpkt->put((uint8_t) 0x01);
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
-
-	bccpkt->put((uint8_t) 0x01);
-
-	//Pangoo:添加TOKEN头
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_TOKEN.c_str(),TOKEN_LENGTH);
-
-	bccpkt->putShort(htons(6)); //YinDi:数据长度
-
-	time_t now;  //实例化time_t结构
-	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
-//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
-	struct tm *timenow;  //实例化tm结构指针
-	struct tm timenowInstance;
-	timenow = gmtime_r(&now,&timenowInstance);
-
-	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
-	bccpkt->put(timenow->tm_mon + 1); //月 1～12
-	bccpkt->put(timenow->tm_mday); //日 1～31
-	bccpkt->put(timenow->tm_hour); //时 0～23
-	bccpkt->put(timenow->tm_min); //分 0～59
-	bccpkt->put(timenow->tm_sec); //秒 0～59
-
-	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
-	bccpkt->getBytes(BCCBuffer, bccpkt->size());
-	uint8_t checksum = 0;
-	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
-
-	ByteBuffer *wholepkt = new ByteBuffer();
-	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
-	wholepkt->put(bccpkt);
-	wholepkt->put(checksum);
-
-	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
-	wholepkt->getBytes(senBuffer, wholepkt->size());
-
-	int flag = send(conn, senBuffer, wholepkt->size(), 0);
-
-	free(senBuffer);
-	free(BCCBuffer);
-	wholepkt->clear();
-	bccpkt->clear();
-	delete wholepkt;
-	delete bccpkt;
-}
-
-void HandleMsg::Handle_logout(char *buffer){
-	YLOG(VL_INFO,REC,"logout message is %s\n",buffer);
-}
-
-void HandleMsg::Recieve_CallBackMessage(char *buffer){
-	YLOG(VL_INFO,REC,"Recievec CallBack message\n");
-}
-
-void HandleMsg::Recieve_RealTimeMessage(char *buffer, int len){
-	YLOG(VL_INFO,REC,"Recieve RealTimeMessage message\n");
-	ByteBuffer *wholeBuffer = new ByteBuffer();
-	wholeBuffer->putBytes((unsigned char*)buffer,len);
-	int index = wholeBuffer->find(ntohs((short) 0x2304));//下表开始的位置
-	uint8_t encryptionWay = wholeBuffer->get(index + 21);//获取加密方式
-	short dataLength = ntohs(wholeBuffer->getShort(index + 58));//获取数据单元长度
-//	printf("数据单元长度 is %d\n",dataLength);
-	uint8_t checkbit = wholeBuffer->get(index + 60 + dataLength);//获取到的校验和
-//	验证校验和
-	uint8_t *BCCBuffer = (uint8_t *) malloc(sizeof(uint8_t) * (60 + dataLength - 1));
-	wholeBuffer->getBytes(BCCBuffer, 60 + dataLength - 1, index + 1);
-	uint8_t checksum = 0;
-	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, 60 + dataLength - 1);
-	free(BCCBuffer);
-	if(checksum == checkbit){
-//	进行RSA解码
-//		int length = ((dataLength+AES_BLOCK_SIZE-1)/AES_BLOCK_SIZE)*AES_BLOCK_SIZE;
-		char *InBuffer = (char*)malloc(dataLength);
-		char *OutBuffer = (char*)malloc(dataLength);
-		wholeBuffer->getBytes((unsigned char*)InBuffer, dataLength, index + 60);//获取TBOX传达的数据
-		HandleSafe::GetInstance()->aes_decrypt((unsigned char*)InBuffer,(unsigned char*)OutBuffer,dataLength);
-		this->log_message(OutBuffer,dataLength);
-		free(InBuffer);
-		free(OutBuffer);
-	}
-	wholeBuffer->clear();
-	delete wholeBuffer;
 }
 
 void HandleMsg::log_message(char *buff,int len)
@@ -163,7 +59,6 @@ void HandleMsg::log_message(char *buff,int len)
 	ydfs << "~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	timeval __tv;
 	gettimeofday(&__tv, NULL);
-	__tv.tv_sec = __tv.tv_sec;
 	char tmpbuf[128];
 	strftime(tmpbuf,128,"[%F %T] ",localtime(&__tv.tv_sec));
 	ydfs << tmpbuf << endl;
@@ -249,10 +144,288 @@ void HandleMsg::log_message(char *buff,int len)
 	ydfs.close();
 }
 
-void HandleMsg::Recieve_HeartbeatMessage(char *buffer){
+void HandleMsg::Recieve_login(char *buffer, int len, int conn) // 模拟车辆登录应答,数据体暂定为时间戳
+{
+	YLOG(VL_INFO,REC,"Recieve Car login\n");
+	Send_responseCarLogin(conn);
+}
+
+void HandleMsg::Recieve_logout(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,REC,"logout message is %s\n",buffer);
+}
+
+void HandleMsg::Recieve_CallBackMessage(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,REC,"Recievec CallBack message\n");
+}
+
+void HandleMsg::Recieve_ReissueMessage(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,REC,"Recieve Reissue message\n");
+}
+
+void HandleMsg::Recieve_RealTimeMessage(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,REC,"Recieve RealTimeMessage message\n");
+}
+
+void HandleMsg::Recieve_Platlogin(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,REC,"Recieve platform login message\n");
+	Send_responsePlatlogin(conn);
+}
+
+void HandleMsg::Recieve_HeartbeatMessage(char *buffer, int len, int conn)
+{
 	YLOG(VL_INFO,REC,"Recieve Heartbeat message\n");
 }
 
+void HandleMsg::Recieve_requireRSA(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,"Recieve require RSA","Recieve require RSA message\n");
+	Send_responseRSA(conn);
+}
+
+void HandleMsg::Recieve_AESKey(char *buffer, int len, int conn)
+{
+	YLOG(VL_INFO,REC,"Recieve AES message\n");
+	Send_responseAES(conn);
+}
+
+void HandleMsg::Send_responseCarLogin(int conn)
+{
+	ByteBuffer *bccpkt = new ByteBuffer();
+	bccpkt->putBytes((uint8_t*)m_VERSION.c_str(),VERSION_STR_LENGTH); // 版本号占10个字节
+	bccpkt->put((uint8_t) 0x01);
+	bccpkt->put((uint8_t) 0x01);
+	bccpkt->putBytes((uint8_t*)m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
+
+	bccpkt->put((uint8_t) 0x01);
+
+	//Pangoo:添加TOKEN头
+	bccpkt->putBytes((uint8_t*)m_TOKEN.c_str(),TOKEN_LENGTH);
+
+	bccpkt->putShort(htons(6)); //YinDi:数据长度
+
+	time_t now;  //实例化time_t结构
+	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
+//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
+	struct tm *timenow;  //实例化tm结构指针
+	struct tm timenowInstance;
+	timenow = gmtime_r(&now,&timenowInstance);
+
+	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
+	bccpkt->put(timenow->tm_mon + 1); //月 1～12
+	bccpkt->put(timenow->tm_mday); //日 1～31
+	bccpkt->put(timenow->tm_hour); //时 0～23
+	bccpkt->put(timenow->tm_min); //分 0～59
+	bccpkt->put(timenow->tm_sec); //秒 0～59
+
+	uint8_t BCCBuffer[bccpkt->size()] = {0};
+	bccpkt->getBytes(BCCBuffer, bccpkt->size());
+	uint8_t checksum = 0;
+	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
+
+	ByteBuffer *wholepkt = new ByteBuffer();
+	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
+	wholepkt->put(bccpkt);
+	wholepkt->put(checksum);
+
+	uint8_t senBuffer[wholepkt->size()] = {0};
+	wholepkt->getBytes(senBuffer, wholepkt->size());
+
+	int flag = send(conn, senBuffer, wholepkt->size(), 0);
+
+	wholepkt->clear();
+	bccpkt->clear();
+	delete wholepkt;
+	delete bccpkt;
+}
+
+void HandleMsg::Send_responseRSA(int conn){
+	YLOG(VL_INFO,"SEND","Send RSA KEY\n");
+	ByteBuffer *bccpkt = new ByteBuffer();
+	bccpkt->putBytes((uint8_t*)m_VERSION.c_str(),VERSION_STR_LENGTH); // 版本号占10个字节
+	bccpkt->put((uint8_t) 0xC5); // 版本号
+	bccpkt->put((uint8_t) 0x01);
+	bccpkt->putBytes((uint8_t*)m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
+
+	bccpkt->put((uint8_t) 0x01);
+
+	//Pangoo:添加TOKEN头
+	bccpkt->putBytes((uint8_t*)m_TOKEN.c_str(),TOKEN_LENGTH);
+
+//		bccpkt->putShort(htons(0x40)); //数据长度
+	bccpkt->putShort(htons(RSA_LENGTH+6)); //YinDi:数据长度
+
+	time_t now;  //实例化time_t结构
+	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
+//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
+	struct tm *timenow;  //实例化tm结构指针
+	struct tm timenowInstance;
+	timenow = gmtime_r(&now,&timenowInstance);
+
+	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
+	bccpkt->put(timenow->tm_mon + 1); //月 1～12
+	bccpkt->put(timenow->tm_mday); //日 1～31
+	bccpkt->put(timenow->tm_hour); //时 0～23
+	bccpkt->put(timenow->tm_min); //分 0～59
+	bccpkt->put(timenow->tm_sec); //秒 0～59
+
+	char buffer[BUFFER_SIZE];
+	std::string RSAStr;
+	FILE *fp = fopen("yd_pub.pem","r");
+	if(NULL == fp){
+		return;
+	}
+
+	while(NULL != fgets(buffer,64,fp)){
+		if(strncmp(buffer, "-----", 5) == 0)
+		{
+			continue;
+		}
+		else{
+			for(int i=0;i<64;i++)
+				if(buffer[i]=='\n')
+					buffer[i]='\0';
+			RSAStr = RSAStr + buffer;
+			continue;
+		}
+	}
+	bccpkt->putBytes((uint8_t*)RSAStr.c_str(),RSA_LENGTH);
+
+	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
+	bccpkt->getBytes(BCCBuffer, bccpkt->size());
+	uint8_t checksum = 0;
+	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
+
+	ByteBuffer *wholepkt = new ByteBuffer();
+	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
+	wholepkt->put(bccpkt);
+	wholepkt->put(checksum);
+
+	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
+	wholepkt->getBytes(senBuffer, wholepkt->size());
+
+	int flag = send(conn, senBuffer, wholepkt->size(), 0);
+
+	free(senBuffer);
+	free(BCCBuffer);
+	wholepkt->clear();
+	bccpkt->clear();
+	delete wholepkt;
+	delete bccpkt;
+	senBuffer = NULL;
+	BCCBuffer = NULL;
+}
+
+void HandleMsg::Send_responsePlatlogin(int conn){
+	ByteBuffer *bccpkt = new ByteBuffer();
+	bccpkt->putBytes((uint8_t*)m_VERSION.c_str(),VERSION_STR_LENGTH); // 版本号占10个字节
+	bccpkt->put((uint8_t) 0x05);
+	bccpkt->put((uint8_t) 0x01);
+	bccpkt->putBytes((uint8_t*)m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
+
+	bccpkt->put((uint8_t) 0x01);
+
+	//Pangoo:添加TOKEN头
+	bccpkt->putBytes((uint8_t*)m_TOKEN.c_str(),TOKEN_LENGTH);
+
+	bccpkt->putShort(htons(6)); //YinDi:数据长度
+
+	time_t now;  //实例化time_t结构
+	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
+//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
+	struct tm *timenow;  //实例化tm结构指针
+	struct tm timenowInstance;
+	timenow = gmtime_r(&now,&timenowInstance);
+
+	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
+	bccpkt->put(timenow->tm_mon + 1); //月 1～12
+	bccpkt->put(timenow->tm_mday); //日 1～31
+	bccpkt->put(timenow->tm_hour); //时 0～23
+	bccpkt->put(timenow->tm_min); //分 0～59
+	bccpkt->put(timenow->tm_sec); //秒 0～59
+
+	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
+	bccpkt->getBytes(BCCBuffer, bccpkt->size());
+	uint8_t checksum = 0;
+	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
+
+	ByteBuffer *wholepkt = new ByteBuffer();
+	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
+	wholepkt->put(bccpkt);
+	wholepkt->put(checksum);
+
+	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
+	wholepkt->getBytes(senBuffer, wholepkt->size());
+
+	int flag = send(conn, senBuffer, wholepkt->size(), 0);
+
+	free(senBuffer);
+	free(BCCBuffer);
+	wholepkt->clear();
+	bccpkt->clear();
+	delete wholepkt;
+	delete bccpkt;
+	senBuffer = NULL;
+	BCCBuffer = NULL;
+}
+
+void HandleMsg::Send_responseAES(int conn){
+	ByteBuffer *bccpkt = new ByteBuffer();
+	bccpkt->putBytes((uint8_t*)m_VERSION.c_str(),VERSION_STR_LENGTH); // 版本号占10个字节
+	bccpkt->put((uint8_t) 0xC6);
+	bccpkt->put((uint8_t) 0x01);
+	bccpkt->putBytes((uint8_t*)m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
+
+	bccpkt->put((uint8_t) 0x01);
+
+	//Pangoo:添加TOKEN头
+	bccpkt->putBytes((uint8_t*)m_TOKEN.c_str(),TOKEN_LENGTH);
+
+//		bccpkt->putShort(htons(0x40)); //数据长度
+	bccpkt->putShort(htons(6)); //YinDi:数据长度
+
+	time_t now;  //实例化time_t结构
+	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
+//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
+	struct tm *timenow;  //实例化tm结构指针
+	struct tm timenowInstance;
+	timenow = gmtime_r(&now,&timenowInstance);
+
+	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
+	bccpkt->put(timenow->tm_mon + 1); //月 1～12
+	bccpkt->put(timenow->tm_mday); //日 1～31
+	bccpkt->put(timenow->tm_hour); //时 0～23
+	bccpkt->put(timenow->tm_min); //分 0～59
+	bccpkt->put(timenow->tm_sec); //秒 0～59
+
+	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
+	bccpkt->getBytes(BCCBuffer, bccpkt->size());
+	uint8_t checksum = 0;
+	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
+
+	ByteBuffer *wholepkt = new ByteBuffer();
+	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
+	wholepkt->put(bccpkt);
+	wholepkt->put(checksum);
+
+	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
+	wholepkt->getBytes(senBuffer, wholepkt->size());
+
+	int flag = send(conn, senBuffer, wholepkt->size(), 0);
+
+	free(senBuffer);
+	free(BCCBuffer);
+	wholepkt->clear();
+	bccpkt->clear();
+	delete wholepkt;
+	delete bccpkt;
+	senBuffer = NULL;
+	BCCBuffer = NULL;
+}
 
 void HandleMsg::SendCmd_lock(uint8_t *buffer, int &len){
 	int d0;
@@ -325,262 +498,6 @@ void HandleMsg::SendCmd_lightControl(uint8_t *buffer, int &len){
 	len++;
 }
 
-void HandleMsg::Recieve_requireRSA(char *buffer, int conn){
-//	printf("收到RSA公钥获取请求\n");
-	YLOG(VL_INFO,"Recieve require RSA","Recieve require RSA message\n");
-	Send_requestRSA(conn);
-}
-
-void HandleMsg::Recieve_Platlogin(char *buffer, int conn){
-//	printf("接收到了平台登录请求\n");
-	YLOG(VL_INFO,REC,"Recieve platform login message\n");
-	Send_requestPlatlogin(conn);
-}
-
-void HandleMsg::Recieve_AESKey(char *buffer,int len){
-//	printf("收到AES密钥\n");
-	YLOG(VL_INFO,REC,"Recieve AES message\n");
-//	printf("AES key len is %d\n",len);
-//	先获取到接受到的buffer数据处理：获取加密方式，获取数据长度，获取校验和
-	ByteBuffer *wholeBuffer = new ByteBuffer();
-	wholeBuffer->putBytes((unsigned char*)buffer,len);
-	int index = wholeBuffer->find(ntohs((short) 0x2304));//下表开始的位置
-	uint8_t encryptionWay = wholeBuffer->get(index + 21);//获取加密方式
-	short dataLength = ntohs(wholeBuffer->getShort(index + 58));//获取数据单元长度
-//	printf("数据单元长度 is %d\n",dataLength);
-	uint8_t checkbit = wholeBuffer->get(index + 60 + dataLength);//获取到的校验和
-//	验证校验和
-	uint8_t *BCCBuffer = (uint8_t *) malloc(sizeof(uint8_t) * (60 + dataLength - 1));
-	wholeBuffer->getBytes(BCCBuffer, 60 + dataLength - 1, index + 1);
-	uint8_t checksum = 0;
-	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, 60 + dataLength - 1);
-	free(BCCBuffer);
-	if(checksum == checkbit){
-//	进行RSA解码
-		uint8_t *AESBuffer = (uint8_t *) malloc(344);
-		wholeBuffer->getBytes(AESBuffer, 344, index + 66);//获取TBOX传达的数据
-		char *RSAStr = (char*)malloc(256);
-		char *AESBuf = (char*)malloc(100);
-		int De_Base64Len = HandleSafe::GetInstance()->Base64_decrypt((char*)AESBuffer,344,RSAStr);
-//		printf("Base64 len is %d\n",De_Base64Len);
-		int De_RSALen = HandleSafe::GetInstance()->RSA_decrypt((char*)RSAStr,AESBuf);
-//		printf("RSA len is %d\n",De_RSALen);
-//		std::string AES_Str;
-//		AES_Str = std::string(AESBuf,strlen(AESBuf));
-		HandleSafe::GetInstance()->m_AESKEY = std::string(AESBuf,De_RSALen);
-		std::cout<<HandleSafe::GetInstance()->m_AESKEY<<std::endl;
-		free(AESBuffer);
-		free(RSAStr);
-		free(AESBuf);
-	}
-	wholeBuffer->clear();
-	delete wholeBuffer;
-}
-
-void HandleMsg::Recieve_ReissueMessage(char *buffer){
-//	printf("收到了补发数据\n");
-	YLOG(VL_INFO,REC,"Recieve Reissue message\n");
-}
-
-void HandleMsg::Send_requestRSA(int conn){
-	YLOG(VL_INFO,"SEND","Send RSA KEY\n");
-	ByteBuffer *bccpkt = new ByteBuffer();
-	bccpkt->put((uint8_t) 0x04);
-	bccpkt->put((uint8_t) 0xC5);
-	bccpkt->put((uint8_t) 0x01);
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
-
-	bccpkt->put((uint8_t) 0x01);
-
-	//Pangoo:添加TOKEN头
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_TOKEN.c_str(),TOKEN_LENGTH);
-
-//		bccpkt->putShort(htons(0x40)); //数据长度
-	bccpkt->putShort(htons(RSA_LENGTH+6)); //YinDi:数据长度
-
-	time_t now;  //实例化time_t结构
-	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
-//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
-	struct tm *timenow;  //实例化tm结构指针
-	struct tm timenowInstance;
-	timenow = gmtime_r(&now,&timenowInstance);
-
-	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
-	bccpkt->put(timenow->tm_mon + 1); //月 1～12
-	bccpkt->put(timenow->tm_mday); //日 1～31
-	bccpkt->put(timenow->tm_hour); //时 0～23
-	bccpkt->put(timenow->tm_min); //分 0～59
-	bccpkt->put(timenow->tm_sec); //秒 0～59
-
-	char buffer[BUFFER_SIZE];
-	std::string RSAStr;
-	FILE *fp = fopen("yd_pub.pem","r");
-	if(NULL == fp){
-		return;
-	}
-
-	while(NULL != fgets(buffer,64,fp)){
-		if(strncmp(buffer, "-----", 5) == 0)
-		{
-			continue;
-		}
-		else{
-			for(int i=0;i<64;i++)
-				if(buffer[i]=='\n')
-					buffer[i]='\0';
-			RSAStr = RSAStr + buffer;
-			continue;
-		}
-	}
-	bccpkt->putBytes((uint8_t*)RSAStr.c_str(),RSA_LENGTH);
-
-	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
-	bccpkt->getBytes(BCCBuffer, bccpkt->size());
-	uint8_t checksum = 0;
-	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
-
-	ByteBuffer *wholepkt = new ByteBuffer();
-	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
-	wholepkt->put(bccpkt);
-	wholepkt->put(checksum);
-
-	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
-	wholepkt->getBytes(senBuffer, wholepkt->size());
-
-	int flag = send(conn, senBuffer, wholepkt->size(), 0);
-
-	free(senBuffer);
-	free(BCCBuffer);
-	wholepkt->clear();
-	bccpkt->clear();
-	delete wholepkt;
-	delete bccpkt;
-	senBuffer = NULL;
-	BCCBuffer = NULL;
-}
-
-void HandleMsg::Send_requestPlatlogin(int conn){
-	ByteBuffer *bccpkt = new ByteBuffer();
-	bccpkt->put((uint8_t) 0x04);
-	bccpkt->put((uint8_t) 0x05);
-	bccpkt->put((uint8_t) 0x01);
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
-
-	bccpkt->put((uint8_t) 0x01);
-
-	//Pangoo:添加TOKEN头
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_TOKEN.c_str(),TOKEN_LENGTH);
-
-//		bccpkt->putShort(htons(0x40)); //数据长度
-	bccpkt->putShort(htons(6)); //YinDi:数据长度
-
-	time_t now;  //实例化time_t结构
-	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
-//	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
-	struct tm *timenow;  //实例化tm结构指针
-	struct tm timenowInstance;
-	timenow = gmtime_r(&now,&timenowInstance);
-
-	bccpkt->put(timenow->tm_year + 1900 - 2000); //年 0～99
-	bccpkt->put(timenow->tm_mon + 1); //月 1～12
-	bccpkt->put(timenow->tm_mday); //日 1～31
-	bccpkt->put(timenow->tm_hour); //时 0～23
-	bccpkt->put(timenow->tm_min); //分 0～59
-	bccpkt->put(timenow->tm_sec); //秒 0～59
-
-	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
-	bccpkt->getBytes(BCCBuffer, bccpkt->size());
-	uint8_t checksum = 0;
-	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
-
-	ByteBuffer *wholepkt = new ByteBuffer();
-	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
-	wholepkt->put(bccpkt);
-	wholepkt->put(checksum);
-
-	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
-	wholepkt->getBytes(senBuffer, wholepkt->size());
-
-	int flag = send(conn, senBuffer, wholepkt->size(), 0);
-
-	free(senBuffer);
-	free(BCCBuffer);
-	wholepkt->clear();
-	bccpkt->clear();
-	delete wholepkt;
-	delete bccpkt;
-	senBuffer = NULL;
-	BCCBuffer = NULL;
-}
-
-//void HandleMsg::Send_requestAES(int conn){
-//	ByteBuffer *bccpkt = new ByteBuffer();
-//	bccpkt->put((uint8_t) 0x04);
-//	bccpkt->put((uint8_t) 0xC6);
-//	bccpkt->put((uint8_t) 0x01);
-//	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_VIN.c_str(),VIN_LENGTH); //VIN:VIN, 应符合 GB16735 的规定 AAAAAAAAAA0009990
-//
-//	bccpkt->put((uint8_t) 0x00);
-//
-//	//Pangoo:添加TOKEN头
-//	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_TOKEN.c_str(),TOKEN_LENGTH);
-//
-//	bccpkt->putShort(htons(6)); //YinDi:数据长度
-//
-//	time_t now;  //实例化time_t结构
-//	time(&now);  //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
-////	now = now + 8 * 3600;  //GMT+8*3600，等于北京时间
-//	struct tm *timenow;  //实例化tm结构指针
-//	struct tm timenowInstance;
-//	timenow = gmtime_r(&now,&timenowInstance);
-//
-//	ByteBuffer *databuffer = new ByteBuffer();
-//
-//	databuffer->put(timenow->tm_year + 1900 - 2000); //年 0～99
-//	databuffer->put(timenow->tm_mon + 1); //月 1～12
-//	databuffer->put(timenow->tm_mday); //日 1～31
-//	databuffer->put(timenow->tm_hour); //时 0～23
-//	databuffer->put(timenow->tm_min); //分 0～59
-//	databuffer->put(timenow->tm_sec); //秒 0～59
-//	char *databuf = (char*)malloc(sizeof(char) * databuffer->size());
-//	databuffer->getBytes((unsigned char*)databuf, databuffer->size());
-//	int length = ((databuffer->size()+AES_BLOCK_SIZE-1)/AES_BLOCK_SIZE)*AES_BLOCK_SIZE;
-//	char *outbuf = (char*)malloc(sizeof(char) * length);
-//
-//	HandleSafe::GetInstance()->aes_encrypt(databuf,(char*)ConfigServer::GetInstance()->m_AESKEY.c_str(),outbuf);
-//	bccpkt->putBytes((uint8_t*)outbuf, length);
-//
-//	uint8_t *BCCBuffer = (uint8_t*) malloc(sizeof(uint8_t) * bccpkt->size());
-//	bccpkt->getBytes(BCCBuffer, bccpkt->size());
-//	uint8_t checksum = 0;
-//	checksum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, bccpkt->size());
-//
-//	ByteBuffer *wholepkt = new ByteBuffer();
-//	wholepkt->put((uint8_t) 0x23);  //起始符:固定为ASCII字符‘#’,用“0x23”表示
-//	wholepkt->put(bccpkt);
-//	wholepkt->put(checksum);
-//
-//	uint8_t *senBuffer = (uint8_t*) malloc(sizeof(uint8_t) * wholepkt->size());
-//	wholepkt->getBytes(senBuffer, wholepkt->size());
-//
-//	int flag = send(conn, senBuffer, wholepkt->size(), 0);
-//
-//	free(senBuffer);
-//	free(outbuf);
-//	free(databuf);
-//	free(BCCBuffer);
-//	delete databuffer;
-//	delete wholepkt;
-//	delete bccpkt;
-//	databuffer = NULL;
-//	outbuf = NULL;
-//	databuf = NULL;
-//	senBuffer = NULL;
-//	BCCBuffer = NULL;
-//	wholepkt = NULL;
-//	bccpkt = NULL;
-//}
-
 int HandleMsg::Continue_in(){
 	int yflag = 0;
 	char c0;
@@ -620,9 +537,9 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	bccpkt->put((uint8_t) 0x04);
 	bccpkt->put((uint8_t) 0xC3);
 	bccpkt->put((uint8_t) 0xFE);
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_VIN.c_str(),VIN_LENGTH);
+	bccpkt->putBytes((uint8_t*)m_VIN.c_str(),VIN_LENGTH);
 	bccpkt->put((uint8_t) 0x03);
-	bccpkt->putBytes((uint8_t*)ConfigServer::GetInstance()->m_TOKEN.c_str(),TOKEN_LENGTH);
+	bccpkt->putBytes((uint8_t*)m_TOKEN.c_str(),TOKEN_LENGTH);
 
 	ByteBuffer *UnitDatapkt = new ByteBuffer();
 	time_t now;  //实例化time_t结构
@@ -745,36 +662,34 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	delete wholepkt;
 }
 
-void HandleMsg::Recieve_Preprocess(char *buffer, int conn, int len){
-//	this->m_encryptType = buffer[21];
-//	this->m_msgType = buffer[2];
-	switch((uint8_t)buffer[2]){
+void HandleMsg::Recieve_Preprocess(char *buffer, int len, int conn){
+	switch((uint8_t)buffer[11]){
 	case 0x01:
-		this->Handle_login(buffer,conn);//应答车辆登陆成功
+		this->Recieve_login(buffer, len, conn);//应答车辆登陆成功
 		break;
 	case 0x02:
-		this->Recieve_RealTimeMessage(buffer, len);//记录这部分上传的周期数据
+		this->Recieve_RealTimeMessage(buffer, len, conn);//记录这部分上传的周期数据
 		break;
 	case 0x03:
-		this->Recieve_ReissueMessage(buffer);
+		this->Recieve_ReissueMessage(buffer, len, conn);
 		break;
 	case 0x04:
-		this->Handle_logout(buffer);
+		this->Recieve_logout(buffer, len, conn);
 		break;
 	case 0x05:
-		this->Recieve_Platlogin(buffer,conn);//返回TOKEN值
+		this->Recieve_Platlogin(buffer, len, conn);//返回TOKEN值
 		break;
 	case 0x07:
-		this->Recieve_HeartbeatMessage(buffer);
+		this->Recieve_HeartbeatMessage(buffer, len, conn);
 		break;
 	case 0xC3:
-		this->Recieve_CallBackMessage(buffer);//记录这部分上传的车辆控制应答数据
+		this->Recieve_CallBackMessage(buffer, len, conn);//记录这部分上传的车辆控制应答数据
 		break;
 	case 0xC5:
-		this->Recieve_requireRSA(buffer, conn);//需要返回RSA公钥
+		this->Recieve_requireRSA(buffer, len, conn);//需要返回RSA公钥
 		break;
 	case 0xC6:
-		this->Recieve_AESKey(buffer,len);//保留AES秘钥
+		this->Recieve_AESKey(buffer, len, conn);//保留AES秘钥
 		break;
 	default:
 		break;
