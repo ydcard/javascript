@@ -109,3 +109,15 @@
 [2020-04-24 07:41:07:999917][REC]Recieve platform login message
 [2020-04-24 07:41:09:051530][REC]Recieve AES message
 [2020-04-24 07:41:10:102927][REC]Recieve Car login
+[2020-04-24 07:53:43:317957][Recieve require RSA]Recieve require RSA message
+[2020-04-24 07:53:43:318301][SEND]Send RSA KEY
+[2020-04-24 07:53:44:386459][REC]Recieve platform login message
+[2020-04-24 07:53:45:499506][REC]Recieve AES message
+[2020-04-24 07:53:46:610313][REC]Recieve Car login
+[2020-04-24 07:53:51:711303][REC]Recieve RealTimeMessage message
+[2020-04-24 07:53:51:852327][REC]Recieve RealTimeMessage message
+[2020-04-24 07:53:51:952310][REC]Recieve RealTimeMessage message
+[2020-04-24 07:53:54:682440][REC]Recieve RealTimeMessage message
+[2020-04-24 07:54:04:683350][REC]Recieve RealTimeMessage message
+[2020-04-24 07:54:14:783334][REC]Recieve RealTimeMessage message
+[2020-04-24 07:54:24:674944][REC]Recieve RealTimeMessage message
