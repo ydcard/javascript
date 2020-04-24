@@ -121,3 +121,113 @@
 [2020-04-24 07:54:04:683350][REC]Recieve RealTimeMessage message
 [2020-04-24 07:54:14:783334][REC]Recieve RealTimeMessage message
 [2020-04-24 07:54:24:674944][REC]Recieve RealTimeMessage message
+[2020-04-24 08:04:09:115241][Recieve require RSA]Recieve require RSA message
+[2020-04-24 08:04:09:115464][SEND]Send RSA KEY
+[2020-04-24 08:04:10:707542][REC]Recieve platform login message
+[2020-04-24 08:04:11:001943][REC]Recieve AES message
+[2020-04-24 08:04:13:259349][REC]Recieve Car login
+[2020-04-24 08:04:16:747652][REC]Recieve RealTimeMessage message
+[2020-04-24 08:04:26:499785][REC]Recieve RealTimeMessage message
+[2020-04-24 08:04:36:420413][REC]Recieve RealTimeMessage message
+[2020-04-24 08:08:50:868686][Recieve require RSA]Recieve require RSA message
+[2020-04-24 08:08:50:868995][SEND]Send RSA KEY
+[2020-04-24 08:08:52:062058][REC]Recieve platform login message
+[2020-04-24 08:08:53:341370][REC]Recieve AES message
+[2020-04-24 08:08:54:653713][REC]Recieve Car login
+[2020-04-24 08:08:56:541873][REC]Recieve RealTimeMessage message
+[2020-04-24 08:10:09:752371][Recieve require RSA]Recieve require RSA message
+[2020-04-24 08:10:09:752686][SEND]Send RSA KEY
+[2020-04-24 08:10:10:930310][REC]Recieve platform login message
+[2020-04-24 08:10:12:229700][REC]Recieve AES message
+[2020-04-24 08:10:13:526522][REC]Recieve Car login
+[2020-04-24 08:10:15:442348][REC]Recieve RealTimeMessage message
+[2020-04-24 08:10:25:442750][REC]Recieve RealTimeMessage message
+[2020-04-24 09:13:11:293960][Recieve require RSA]Recieve require RSA message
+[2020-04-24 09:13:11:294209][SEND]Send RSA KEY
+[2020-04-24 09:13:12:862679][REC]Recieve platform login message
+[2020-04-24 09:13:13:982515][REC]Recieve AES message
+[2020-04-24 09:13:15:108547][REC]Recieve Car login
+[2020-04-24 09:13:16:214292][REC]Recieve RealTimeMessage message
+[2020-04-24 09:13:21:196554][REC]Recieve RealTimeMessage message
+[2020-04-24 09:13:21:356639][REC]Recieve RealTimeMessage message
+[2020-04-24 09:13:21:516551][REC]Recieve RealTimeMessage message
+[2020-04-24 09:13:21:676685][REC]Recieve RealTimeMessage message
+[2020-04-24 09:13:26:168512][REC]Recieve RealTimeMessage message
+[2020-04-24 09:16:41:293682][Recieve require RSA]Recieve require RSA message
+[2020-04-24 09:16:41:293877][SEND]Send RSA KEY
+[2020-04-24 09:16:42:355193][REC]Recieve platform login message
+[2020-04-24 09:16:43:467392][REC]Recieve AES message
+[2020-04-24 09:16:44:579505][REC]Recieve Car login
+[2020-04-24 09:16:46:259601][REC]Recieve RealTimeMessage message
+[2020-04-24 09:16:56:179554][REC]Recieve RealTimeMessage message
+[2020-04-24 09:29:48:064958][Recieve require RSA]Recieve require RSA message
+[2020-04-24 09:29:48:065248][SEND]Send RSA KEY
+[2020-04-24 09:29:49:107455][REC]Recieve platform login message
+[2020-04-24 09:29:50:251496][REC]Recieve AES message
+[2020-04-24 09:29:51:379156][REC]Recieve Car login
+[2020-04-24 09:29:55:219086][REC]Recieve RealTimeMessage message
+[2020-04-24 09:30:29:308890][Recieve require RSA]Recieve require RSA message
+[2020-04-24 09:30:29:309083][SEND]Send RSA KEY
+[2020-04-24 09:30:30:350865][REC]Recieve platform login message
+[2020-04-24 09:30:31:479564][REC]Recieve AES message
+[2020-04-24 09:30:32:590593][REC]Recieve Car login
+[2020-04-24 09:30:34:230501][REC]Recieve RealTimeMessage message
+[2020-04-24 09:30:39:222640][REC]Recieve RealTimeMessage message
+[2020-04-24 09:35:26:393610][Recieve require RSA]Recieve require RSA message
+[2020-04-24 09:35:26:393909][SEND]Send RSA KEY
+[2020-04-24 09:35:27:407990][REC]Recieve platform login message
+[2020-04-24 09:35:28:527954][REC]Recieve AES message
+[2020-04-24 09:35:29:653399][REC]Recieve Car login
+[2020-04-24 09:35:32:280831][REC]Recieve RealTimeMessage message
+[2020-04-24 09:35:42:199953][REC]Recieve RealTimeMessage message
+[2020-04-24 10:19:46:348696][Recieve require RSA]Recieve require RSA message
+[2020-04-24 10:19:46:349190][SEND]Send RSA KEY
+[2020-04-24 10:19:48:277419][REC]Recieve platform login message
+[2020-04-24 10:19:49:396127][REC]Recieve AES message
+[2020-04-24 10:19:50:508627][REC]Recieve Car login
+[2020-04-24 10:19:52:268029][REC]Recieve RealTimeMessage message
+[2020-04-24 10:20:31:323695][Recieve require RSA]Recieve require RSA message
+[2020-04-24 10:20:31:326099][SEND]Send RSA KEY
+[2020-04-24 10:20:32:385720][REC]Recieve platform login message
+[2020-04-24 10:20:33:505954][REC]Recieve AES message
+[2020-04-24 10:20:34:617763][REC]Recieve Car login
+[2020-04-24 10:20:36:057778][REC]Recieve RealTimeMessage message
+[2020-04-24 10:20:40:897255][REC]Recieve RealTimeMessage message
+[2020-04-24 10:28:01:902054][Recieve require RSA]Recieve require RSA message
+[2020-04-24 10:28:01:902274][SEND]Send RSA KEY
+[2020-04-24 10:28:02:936167][REC]Recieve platform login message
+[2020-04-24 10:28:04:080083][REC]Recieve AES message
+[2020-04-24 10:28:05:177511][REC]Recieve Car login
+[2020-04-24 10:28:07:968053][REC]Recieve RealTimeMessage message
+[2020-04-24 10:28:17:928608][REC]Recieve RealTimeMessage message
+[2020-04-24 10:34:44:484817][Recieve require RSA]Recieve require RSA message
+[2020-04-24 10:34:44:485043][SEND]Send RSA KEY
+[2020-04-24 10:34:45:521254][REC]Recieve platform login message
+[2020-04-24 10:34:46:670660][REC]Recieve AES message
+[2020-04-24 10:34:47:795356][REC]Recieve Car login
+[2020-04-24 10:34:49:016321][REC]Recieve RealTimeMessage message
+[2020-04-24 10:34:58:913845][REC]Recieve RealTimeMessage message
+[2020-04-24 10:45:57:241874][Recieve require RSA]Recieve require RSA message
+[2020-04-24 10:45:57:242074][SEND]Send RSA KEY
+[2020-04-24 10:45:58:293755][REC]Recieve platform login message
+[2020-04-24 10:45:59:415030][REC]Recieve AES message
+[2020-04-24 10:47:30:973020][Recieve require RSA]Recieve require RSA message
+[2020-04-24 10:47:30:973272][SEND]Send RSA KEY
+[2020-04-24 10:47:32:013962][REC]Recieve platform login message
+[2020-04-24 11:07:43:646769][Recieve require RSA]Recieve require RSA message
+[2020-04-24 11:07:43:646990][SEND]Send RSA KEY
+[2020-04-24 11:07:44:681167][REC]Recieve platform login message
+[2020-04-24 11:07:45:815504][REC]Recieve AES message
+[2020-04-24 11:08:22:809971][Recieve require RSA]Recieve require RSA message
+[2020-04-24 11:08:22:810212][SEND]Send RSA KEY
+[2020-04-24 11:08:23:839536][REC]Recieve platform login message
+[2020-04-24 11:08:24:980463][REC]Recieve AES message
+[2020-04-24 11:08:26:080622][REC]Recieve Car login
+[2020-04-24 11:08:28:903623][REC]Recieve RealTimeMessage message
+[2020-04-24 11:08:38:903228][REC]Recieve RealTimeMessage message
+[2020-04-24 11:08:48:957287][REC]Recieve RealTimeMessage message
+[2020-04-24 11:08:58:952789][REC]Recieve RealTimeMessage message
+[2020-04-24 11:09:08:903705][REC]Recieve RealTimeMessage message
+[2020-04-24 11:09:18:911659][REC]Recieve RealTimeMessage message
+[2020-04-24 11:09:28:903924][REC]Recieve RealTimeMessage message
+[2020-04-24 11:09:38:941727][REC]Recieve RealTimeMessage message
