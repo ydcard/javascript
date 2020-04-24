@@ -108,6 +108,7 @@ void HandleMsg::log_message(uint8_t *buff,int len)
 	YDLog(4,"曲轴转速",'d',__QuZhou);//曲轴转速
 	uint16_t __Oil = (*buffer++ << 8) + (*buffer++);
 	YDLog(4,"瞬时油耗",'d',__Oil);//瞬时油耗
+	buffer = buffer + 2;
 	buffer = buffer + 1;
 
 	//车辆位置
@@ -118,15 +119,15 @@ void HandleMsg::log_message(uint8_t *buff,int len)
 	YDLog(2,"纬度",'d',__lat);//纬度
 	buffer = buffer + 1;
 
-	//报警数据
-	YDLog(4,"胎压预警",'x',*buffer++);//胎压预警
-	YDLog(9,"发动机后置氧传感器",'x',*buffer++);//发动机后置氧传感器需要诊断援助
-	YDLog(4,"刹车过热",'x',*buffer++);//刹车过热
-	YDLog(5,"变速箱预警",'x',*buffer++);//变速箱预警
-	YDLog(5,"离合器预警",'x',*buffer++);//离合器预警
-	YDLog(3,"俯仰角",'x',*buffer++);//俯仰角
-	YDLog(3,"侧倾角",'x',*buffer++);//侧倾角
-	buffer = buffer + 1;
+//	//报警数据
+//	YDLog(4,"胎压预警",'x',*buffer++);//胎压预警
+//	YDLog(9,"发动机后置氧传感器",'x',*buffer++);//发动机后置氧传感器需要诊断援助
+//	YDLog(4,"刹车过热",'x',*buffer++);//刹车过热
+//	YDLog(5,"变速箱预警",'x',*buffer++);//变速箱预警
+//	YDLog(5,"离合器预警",'x',*buffer++);//离合器预警
+//	YDLog(3,"俯仰角",'x',*buffer++);//俯仰角
+//	YDLog(3,"侧倾角",'x',*buffer++);//侧倾角
+//	buffer = buffer + 1;
 
 	//81 Pangoo自定义数据
 	YDLog(4,"门锁状态",'x',*buffer++);
