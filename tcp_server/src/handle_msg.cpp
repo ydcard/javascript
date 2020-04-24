@@ -460,7 +460,20 @@ void HandleMsg::HandleUploadMsg(char *buffer, int len)
 			else if (encryptFlag == 0x03) {
 				uint8_t dataBeforeEncrypt[dataLen] = {0};
 				wholeBuffer->getBytes(dataBeforeEncrypt, dataLen, index + 69);
+
+				printf("before decrypt: \n");
+				for(int i=0; i<dataLen; i++) {
+					printf("%#02X", dataBeforeEncrypt[i]);
+				}
+				printf("\n");
+
 				HandleSafe::GetInstance()->aes_decrypt(dataBeforeEncrypt,dataUnitBuffer,dataLen);
+
+				printf("after decrypt: \n");
+				for(int i=0; i<dataLen; i++) {
+					printf("%#02X", dataUnitBuffer[i]);
+				}
+				printf("\n");
 			}
 			log_message(dataUnitBuffer,dataLen);
 		}
