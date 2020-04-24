@@ -65,7 +65,7 @@ int main()
 			perror("connect");
 			exit(1);
 		}
-		printf("client connect success\n");
+		printf("client connect success: conn is %d\n", conn);
 
 		socketMgr->init(conn);
 		printf("reconnect\n");

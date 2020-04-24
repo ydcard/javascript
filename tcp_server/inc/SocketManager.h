@@ -12,6 +12,7 @@
 #include <string>
 #include <thread>
 #include <iostream>
+#include <chrono>
 #include <unistd.h>
 #include "handle_msg.h"
 
@@ -21,60 +22,14 @@ public:
 	SocketManager(){}
 	~SocketManager(){}
 
-	void init(int _connectId){
-		m_iConnectId = _connectId;
-		std::thread StartSendCmdToTbox(&SocketManager::SendCmdToTboxThread, this);
-		StartSendCmdToTbox.detach();
+	void exitConnect();
 
-		std::thread StartRecFromTbox(&SocketManager::RevMsgFromTboxThread, this);
-	}
+	void SendCmdToTboxThread();
 
-	void exitConnect(){
-		m_bShouldExit = true;
-		close(m_iConnectId);
-	}
+	void RevMsgFromTboxThread();
 
-	void SendCmdToTboxThread(){
-		if (m_bSendCmdThreadRunning) {
-			return;
-		}
-		m_bSendCmdThreadRunning = true;
-	    char *buffer = new char[BUFFER_SIZE];
-		while (1) {
-		    memset(buffer,0,sizeof(buffer));
-			int plen;
-			char s[100];
-			scanf("%s",s);
-			if (strncmp(s,"0",1)!=0) {
-				printf("please enter 0 to begin send message\n");
-				continue;
-			}
-			HandleMsg::GetInstance()->HandleSend(buffer,&plen);
-	        int len = send(m_iConnectId, buffer, plen, 0);
+	void init(int _connectId);
 
-	        if(m_bShouldExit){
-	         	break;
-	        }
-		}
-	    delete buffer;
-	    buffer = NULL;
-	    m_bSendCmdThreadRunning = false;
-	}
-
-	void RevMsgFromTboxThread(){
-		while (true) {
-		    char buffer[BUFFER_SIZE];
-		    memset(buffer,0,sizeof(buffer));
-	        int len = recv(m_iConnectId, buffer, sizeof(buffer),0);///接收
-	        if(len > 0){
-	        	HandleMsg::GetInstance()->Recieve_Preprocess(buffer,m_iConnectId,len);
-	        }
-	        else{
-	        	exitConnect();
-	        	break;
-	        }
-		}
-	}
 private:
 	bool m_bSendCmdThreadRunning{false};
 	bool m_bShouldExit{false};

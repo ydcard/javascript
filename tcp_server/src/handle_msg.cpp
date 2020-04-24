@@ -277,6 +277,7 @@ void HandleMsg::Send_responseRSA(int conn){
 	std::string RSAStr;
 	FILE *fp = fopen("yd_pub.pem","r");
 	if(NULL == fp){
+		printf("error file\n");
 		return;
 	}
 
@@ -309,6 +310,7 @@ void HandleMsg::Send_responseRSA(int conn){
 	wholepkt->getBytes(senBuffer, wholepkt->size());
 
 	int flag = send(conn, senBuffer, wholepkt->size(), 0);
+	printf("send rsa\n");
 
 	free(senBuffer);
 	free(BCCBuffer);
@@ -432,7 +434,7 @@ void HandleMsg::SendCmd_lock(uint8_t *buffer, int &len){
 	len++;
 	buffer[len] = 0x01;
 	len++;
-	printf("Please enter lock command(0：无动作；1：上锁；2：解锁；3：保留) :");
+	printf("Please enter lock command(0：no-action；1：lock；2：unlock；3：reserve) :");
 	scanf("%d",&d0);
 	buffer[len] = d0;
 	fgetc(stdin);
@@ -444,7 +446,7 @@ void HandleMsg::SendCmd_find(uint8_t *buffer, int &len){
 	len++;
 	buffer[len] = 0x01;
 	len++;
-	printf("Please enter find command(0：无动作；1：寻车；2：停止寻车；3：保留) :");
+	printf("Please enter find command(0：no-action；1：start-findCar；2：stop-findCar；3：reserve) :");
 	scanf("%d",&d0);
 	buffer[len] = d0;
 	fgetc(stdin);
@@ -457,15 +459,15 @@ void HandleMsg::SendCmd_airCondition(uint8_t *buffer, int &len){
 	buffer[len] = 0x01;
 	len++;
 	uint8_t c1,c2,c3;
-	printf("输入空调风速：(0~7）-->");
+	printf("enter speed：(0~7）-->");
 	scanf("%d",&d0);
 	c1 = d0;
 	fgetc(stdin);
-	printf("输入空调温度：(0~7）-->");
+	printf("enter temperature：(0~7）-->");
 	scanf("%d",&d0);
 	c2 = d0;
 	fgetc(stdin);
-	printf("输入空调模式：(0~3）-->");
+	printf("enter mode：(0~3）-->");
 	scanf("%d",&d0);
 	c3 = d0;
 	fgetc(stdin);
@@ -534,7 +536,7 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	int dflag = 0;
 	std::vector<int> CmdNum;
 	ByteBuffer *bccpkt = new ByteBuffer();
-	bccpkt->put((uint8_t) 0x04);
+	bccpkt->putBytes((uint8_t*)m_VERSION.c_str(),VERSION_STR_LENGTH); // 版本号占10个字节
 	bccpkt->put((uint8_t) 0xC3);
 	bccpkt->put((uint8_t) 0xFE);
 	bccpkt->putBytes((uint8_t*)m_VIN.c_str(),VIN_LENGTH);
@@ -554,14 +556,14 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	UnitDatapkt->put(timenow->tm_hour); //时 0～23
 	UnitDatapkt->put(timenow->tm_min); //分 0～59
 	UnitDatapkt->put(timenow->tm_sec); //秒 0～59
-	uint8_t *_uploadbuf = (uint8_t*)malloc(36);
-	memset(_uploadbuf,0,36);
+	uint8_t _uploadbuf[36];
+
 	for(int i=0; i<4; i++){
 		sum++;
 		_uploadbuf[0] = sum;
 		while(1){
 			dflag = 0;
-			printf("Please enter command number :( 1:上锁   2:寻车   3:空调   4:氛围灯 )");
+			printf("Please enter command number :( 1:lock   2:findCar   3:airConditioner   4:light )");
 			scanf("%d",&d3);
 			for(int _i = 0;_i<CmdNum.size();_i++){
 //				printf("CmdNum[%d] is %d\n",_i,CmdNum[_i]);
@@ -617,9 +619,9 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	UnitDatapkt->putBytes(_uploadbuf,d1-1);
 	int __length = UnitDatapkt->size();
 	int Buflength = ((__length+AES_BLOCK_SIZE-1)/AES_BLOCK_SIZE)*AES_BLOCK_SIZE;
-	uint8_t *en_UnitDatapkt = (uint8_t*)malloc(sizeof(uint8_t)*__length);
-	uint8_t *UnitDatapkt_in = (uint8_t*)malloc(sizeof(uint8_t)*Buflength);
-	uint8_t *UnitDatapkt_out = (uint8_t*)malloc(sizeof(uint8_t)*Buflength);
+	uint8_t en_UnitDatapkt[__length];
+	uint8_t UnitDatapkt_in[Buflength];
+	uint8_t UnitDatapkt_out[Buflength];
 	UnitDatapkt->getBytes(en_UnitDatapkt,UnitDatapkt->size());
 	memset(UnitDatapkt_in, 0, Buflength);
 	memcpy(UnitDatapkt_in, en_UnitDatapkt, __length);
@@ -628,7 +630,7 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	bccpkt->putShort(htons(Buflength)); //数据长度
 	bccpkt->putBytes(UnitDatapkt_out,Buflength); //经过加密后的数据
 
-	uint8_t *BCCBuffer = (uint8_t *) malloc(sizeof(uint8_t) * bccpkt->size());
+	uint8_t BCCBuffer[bccpkt->size()];
 	bccpkt->getBytes(BCCBuffer, bccpkt->size());
 
 	uint8_t checksum = 0;
@@ -640,7 +642,7 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 	wholepkt->put(bccpkt);
 	wholepkt->put(checksum);
 
-	uint8_t *sendBuffer = (uint8_t *)malloc(sizeof(uint8_t)*wholepkt->size());
+	uint8_t sendBuffer[wholepkt->size()];
 	wholepkt->getBytes(sendBuffer,wholepkt->size());
 
 	memcpy(buffer,sendBuffer,wholepkt->size());
@@ -648,12 +650,6 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 
 //	int flag = send(conn, sendBuffer, wholepkt->size(), 0);
 
-	free(_uploadbuf);
-	free(en_UnitDatapkt);
-	free(UnitDatapkt_in);
-	free(UnitDatapkt_out);
-	free(BCCBuffer);
-	free(sendBuffer);
 	UnitDatapkt->clear();
 	bccpkt->clear();
 	wholepkt->clear();
@@ -663,6 +659,7 @@ void HandleMsg::HandleSend(char *buffer ,int *len){
 }
 
 void HandleMsg::Recieve_Preprocess(char *buffer, int len, int conn){
+	printf("recv msg, type is %#02X\n", buffer[11]);
 	switch((uint8_t)buffer[11]){
 	case 0x01:
 		this->Recieve_login(buffer, len, conn);//应答车辆登陆成功
