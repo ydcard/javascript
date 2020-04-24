@@ -73,7 +73,7 @@ public:
 	void Recieve_requireRSA(char *buffer, int len, int conn);
 	void Recieve_AESKey(char *buffer, int len, int conn);
 
-	void log_message(char *buffer,int len);
+	void log_message(uint8_t *buffer,int len);
 
 	void Send_responseCarLogin(int conn);
 	void Send_responseRSA(int conn);
@@ -87,6 +87,9 @@ public:
 	void SendCmd_airCondition(uint8_t *buffer, int &len);
 	void SendCmd_lightControl(uint8_t *buffer, int &len);
 	int Continue_in();
+
+	// handle receive msg
+	void HandleUploadMsg(char *buffer, int len);
 
 private:
 	HandleMsg();

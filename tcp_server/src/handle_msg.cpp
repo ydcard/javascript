@@ -51,7 +51,7 @@ HandleMsg::~HandleMsg(){
 
 }
 
-void HandleMsg::log_message(char *buff,int len)
+void HandleMsg::log_message(uint8_t *buff,int len)
 {
 	uint8_t *buffer = (uint8_t *)buff;
 	buffer = buffer + 6;
@@ -427,6 +427,42 @@ void HandleMsg::Send_responseAES(int conn){
 	delete bccpkt;
 	senBuffer = NULL;
 	BCCBuffer = NULL;
+}
+
+// 处理实时数据
+void HandleMsg::HandleUploadMsg(char *buffer, int len)
+{
+	std::shared_ptr<ByteBuffer> wholeBuffer = std::make_shared<ByteBuffer>();
+	wholeBuffer->putBytes((uint8_t*)buffer, len);
+	int index = wholeBuffer->find(ntohs((short) 0x2354));
+	if (index >= 0 && wholeBuffer->size() >= (index + 70)) { // 根据数据协议至少包含70个字节大小
+		uint8_t cmdFlag = wholeBuffer->get(index + 11); // 获取命令标识
+		uint8_t ansFlag = wholeBuffer->get(index + 12); // 获取应答标志
+		uint8_t encryptFlag = wholeBuffer->get(index + 30); // 获取加密方式
+		short dataLen = ntohs(wholeBuffer->getShort(index + 67)); // 获取数据长度
+		printf("cmdFlag: %#02X | ansFlag: %#02X | encryptFlag: %#02X | dataLen: %d\n"
+				, cmdFlag, ansFlag, encryptFlag, dataLen);
+		if (dataLen < 0 || wholeBuffer->size() > (index + 70 + dataLen)) {
+			return;
+		}
+		uint8_t checkBit = wholeBuffer->get(index + 69 + dataLen);
+		uint8_t BCCBuffer[69 + dataLen - 1] = {0};
+		wholeBuffer->getBytes(BCCBuffer, 69 + dataLen - 1, index + 1);
+		uint8_t checkSum = HandleSafe::GetInstance()->CheckSum(BCCBuffer, 69 + dataLen - 1);
+		if (checkBit == checkSum) {
+			printf("checksum pass\n");
+			uint8_t dataUnitBuffer[dataLen] = {0};
+			if (encryptFlag == 0x01) {
+				wholeBuffer->getBytes(dataUnitBuffer, dataLen, index + 69);
+			}
+			else if (encryptFlag == 0x03) {
+				uint8_t dataBeforeEncrypt[dataLen] = {0};
+				wholeBuffer->getBytes(dataBeforeEncrypt, dataLen, index + 69);
+				HandleSafe::GetInstance()->aes_decrypt(dataBeforeEncrypt,dataUnitBuffer,dataLen);
+			}
+			log_message(dataUnitBuffer,dataLen);
+		}
+	}
 }
 
 void HandleMsg::SendCmd_lock(uint8_t *buffer, int &len){
