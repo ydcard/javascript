@@ -21,7 +21,7 @@ HandleSafe* HandleSafe::GetInstance(){
 }
 
 HandleSafe::HandleSafe(){
-	m_AESKEY = "";
+	m_AESKEY = "A8943929934B8D11";
 }
 
 HandleSafe::~HandleSafe(){
