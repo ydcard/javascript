@@ -22,7 +22,7 @@ std::ofstream ydfs;
 		char yd_buffer[15];\
     	sprintf(yd_buffer,"：%d\n",variable);\
     	if(ydfs.is_open() == false){\
-    		ydfs.open("ydlog.txt",fstream::app);\
+    		ydfs.open("./ydlog.txt",fstream::app);\
 		}\
 		ydfs << std::left << setw(25+num) << name << yd_buffer;\
 	}\
@@ -30,7 +30,7 @@ std::ofstream ydfs;
 		char yd_buffer[15];\
     	sprintf(yd_buffer,"：%#X\n",variable);\
     	if(ydfs.is_open() == false){\
-    		ydfs.open("ydlog.txt",fstream::app);\
+    		ydfs.open("./ydlog.txt",fstream::app);\
 		}\
 		ydfs << std::left << setw(25+num) << name << yd_buffer;\
     }\
@@ -169,6 +169,7 @@ void HandleMsg::Recieve_ReissueMessage(char *buffer, int len, int conn)
 void HandleMsg::Recieve_RealTimeMessage(char *buffer, int len, int conn)
 {
 	YLOG(VL_INFO,REC,"Recieve RealTimeMessage message\n");
+	HandleUploadMsg(buffer, len);
 }
 
 void HandleMsg::Recieve_Platlogin(char *buffer, int len, int conn)
