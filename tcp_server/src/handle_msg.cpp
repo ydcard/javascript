@@ -441,8 +441,7 @@ void HandleMsg::HandleUploadMsg(char *buffer, int len)
 		uint8_t cmdFlag = wholeBuffer->get(index + 11); // 获取命令标识
 		uint8_t ansFlag = wholeBuffer->get(index + 12); // 获取应答标志
 		uint8_t encryptFlag = wholeBuffer->get(index + 30); // 获取加密方式
-		short dataLen = ntohs(wholeBuffer->getShort(index + 67)); // 获取数据长度
-		printf("len is : %d\n", wholeBuffer->getShort(index + 67));
+		short dataLen = wholeBuffer->getShort(index + 67); // 获取数据长度
 		printf("cmdFlag: %#02X | ansFlag: %#02X | encryptFlag: %#02X | dataLen: %d\n"
 				, cmdFlag, ansFlag, encryptFlag, dataLen);
 		if (dataLen < 0 || wholeBuffer->size() > (index + 70 + dataLen)) {
