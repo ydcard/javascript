@@ -1,0 +1,17 @@
+{
+  "inbound": {
+    "protocol": "vmess",
+    "listen": "127.0.0.1",
+    "port": 23,
+    "settings": {"clients": [
+      {
+        "id": "9e7af71f-c270-4864-b5a9-7fe3c76ddee5"
+      }
+    ]},
+    "streamSettings": {
+    "network": "ws",
+    "wsSettings": {"path": "/fendouqing"}
+    }
+  },
+  "outbound": {"protocol": "freedom"}
+}
